@@ -1,3 +1,4 @@
+import os
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 import pyodbc
@@ -9,8 +10,8 @@ conn_str = (
     "DRIVER={ODBC Driver 17 for SQL Server};"
     "SERVER=acoustic-black-ox.viviotech.us;"
     "DATABASE=Adam_Rocco;"
-    "UID=YOUR_USERNAME;"
-    "PWD=YOUR_PASSWORD;"
+    f"UID={os.environ['DB_USER']};"
+    f"PWD={os.environ['DB_PASSWORD']};"
     "Encrypt=yes;"
     "TrustServerCertificate=yes;"
 )
