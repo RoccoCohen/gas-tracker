@@ -1,4 +1,5 @@
-const storageKey = 'gas-tracker-entries';
+const API_URL = 'YOUR_RENDER_URL';
+
 const form = document.getElementById('entry-form');
 const entriesTable = document.querySelector('#entries-table tbody');
 const summaryText = document.getElementById('summary-text');
@@ -15,15 +16,6 @@ const currencySelect = document.getElementById('currency');
 const stationInput = document.getElementById('station');
 
 const getTodayDate = () => new Date().toISOString().slice(0, 10);
-
-function loadEntries() {
-  const raw = localStorage.getItem(storageKey);
-  return raw ? JSON.parse(raw) : [];
-}
-
-function saveEntries(entries) {
-  localStorage.setItem(storageKey, JSON.stringify(entries));
-}
 
 function formatCurrency(value, currency) {
   const symbol = currency === 'CAD' ? 'C$' : '$';
@@ -61,7 +53,7 @@ function updateSummary(entries) {
 function renderEntries(entries) {
   entriesTable.innerHTML = '';
 
-  entries.forEach((entry, index) => {
+  entries.forEach((entry) => {
     const row = document.createElement('tr');
 
     row.innerHTML = `
@@ -71,23 +63,22 @@ function renderEntries(entries) {
       <td>${formatCurrency(entry.price, entry.currency)}</td>
       <td>${entry.currency}</td>
       <td>${formatCurrency(parseFloat(computePerUnit(entry)), entry.currency)} / ${entry.unit}</td>
-      <td><button class="remove-button" data-index="${index}">Remove</button></td>
+      <td><button class="remove-button" data-id="${entry.id}">Remove</button></td>
     `;
 
     entriesTable.appendChild(row);
   });
 }
 
-function refresh() {
-  const entries = loadEntries();
+async function refresh() {
+  const res = await fetch(`${API_URL}/entries`);
+  const entries = await res.json();
   renderEntries(entries);
   updateSummary(entries);
 }
 
 function exportCsv(entries) {
-  if (!entries.length) {
-    return;
-  }
+  if (!entries.length) return;
 
   const header = ['Date', 'Station', 'Amount', 'Unit', 'Price', 'Currency', 'Per-unit'];
   const rows = entries.map((entry) => [
@@ -113,57 +104,52 @@ function exportCsv(entries) {
   URL.revokeObjectURL(url);
 }
 
-form.addEventListener('submit', (event) => {
+form.addEventListener('submit', async (event) => {
   event.preventDefault();
 
-  const amountValue = amountInput.value.replace(',', '.');
-  const priceValue = priceInput.value.replace(',', '.');
-
   const entry = {
-    amount: parseFloat(amountValue) || 0,
+    amount: parseFloat(amountInput.value.replace(',', '.')) || 0,
     unit: unitSelect.value,
-    price: parseFloat(priceValue) || 0,
+    price: parseFloat(priceInput.value.replace(',', '.')) || 0,
     currency: currencySelect.value,
     station: stationInput.value.trim(),
     date: dateInput.value || getTodayDate(),
   };
 
-  const entries = loadEntries();
-  entries.unshift(entry);
-  saveEntries(entries);
-  refresh();
+  await fetch(`${API_URL}/entries`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(entry),
+  });
+
   form.reset();
   dateInput.value = getTodayDate();
-});
-
-entriesTable.addEventListener('click', (event) => {
-  const button = event.target.closest('button');
-  if (!button) {
-    return;
-  }
-
-  const index = Number(button.dataset.index);
-  if (Number.isNaN(index)) {
-    return;
-  }
-
-  const entries = loadEntries();
-  entries.splice(index, 1);
-  saveEntries(entries);
   refresh();
 });
 
-exportButton.addEventListener('click', () => {
-  const entries = loadEntries();
+entriesTable.addEventListener('click', async (event) => {
+  const button = event.target.closest('button');
+  if (!button) return;
+
+  const id = button.dataset.id;
+  if (!id) return;
+
+  await fetch(`${API_URL}/entries/${id}`, { method: 'DELETE' });
+  refresh();
+});
+
+exportButton.addEventListener('click', async () => {
+  const res = await fetch(`${API_URL}/entries`);
+  const entries = await res.json();
   exportCsv(entries);
 });
 
-clearButton.addEventListener('click', () => {
-  if (!confirm('Clear all saved fill-up entries?')) {
-    return;
-  }
+clearButton.addEventListener('click', async () => {
+  if (!confirm('Clear all saved fill-up entries?')) return;
 
-  localStorage.removeItem(storageKey);
+  const res = await fetch(`${API_URL}/entries`);
+  const entries = await res.json();
+  await Promise.all(entries.map((e) => fetch(`${API_URL}/entries/${e.id}`, { method: 'DELETE' })));
   refresh();
 });
 
