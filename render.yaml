@@ -5,9 +5,5 @@ services:
     buildCommand: pip install -r requirements.txt
     startCommand: gunicorn api:app
     envVars:
-      - key: DB_PATH
-        value: /data/gas_tracker.db
-    disk:
-      name: data
-      mountPath: /data
-      sizeGB: 1
+      - key: DATABASE_URL
+        sync: false

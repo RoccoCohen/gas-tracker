@@ -1,46 +1,41 @@
 import os
-import sqlite3
+import psycopg2
+import psycopg2.extras
 from flask import Flask, request, jsonify, send_from_directory
 from flask_cors import CORS
 
 app = Flask(__name__)
 CORS(app)
 
-DB_PATH = os.environ.get('DB_PATH', 'gas_tracker.db')
+DATABASE_URL = os.environ.get('DATABASE_URL', '')
 
 
 def get_conn():
-    conn = sqlite3.connect(DB_PATH)
-    conn.row_factory = sqlite3.Row
-    return conn
+    return psycopg2.connect(DATABASE_URL)
 
 
 def migrate():
     conn = get_conn()
-    conn.execute("""
+    cur = conn.cursor()
+    cur.execute("""
         CREATE TABLE IF NOT EXISTS gas_entries (
-            id        INTEGER PRIMARY KEY AUTOINCREMENT,
-            amount    REAL,
-            unit      TEXT,
-            price     REAL,
-            currency  TEXT,
-            station   TEXT,
-            date      TEXT,
-            added_by  TEXT,
-            efs_card  INTEGER DEFAULT 0,
-            created_at TEXT DEFAULT (datetime('now'))
+            id         SERIAL PRIMARY KEY,
+            amount     REAL,
+            unit       TEXT,
+            price      REAL,
+            currency   TEXT,
+            station    TEXT,
+            date       TEXT,
+            efs_card   INTEGER DEFAULT 0,
+            created_at TIMESTAMP DEFAULT NOW()
         )
     """)
-    # Add efs_card to existing tables that predate this column
-    try:
-        conn.execute("ALTER TABLE gas_entries ADD COLUMN efs_card INTEGER DEFAULT 0")
-    except Exception:
-        pass
+    cur.execute("ALTER TABLE gas_entries ADD COLUMN IF NOT EXISTS efs_card INTEGER DEFAULT 0")
     conn.commit()
+    cur.close()
     conn.close()
 
 
-# Run on every startup so the table always exists
 migrate()
 
 
@@ -60,10 +55,13 @@ def static_files(filename):
 @app.route('/entries', methods=['GET'])
 def get_entries():
     conn = get_conn()
-    rows = conn.execute(
+    cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+    cur.execute(
         "SELECT id, amount, unit, price, currency, station, date, efs_card "
         "FROM gas_entries ORDER BY date DESC, id DESC"
-    ).fetchall()
+    )
+    rows = cur.fetchall()
+    cur.close()
     conn.close()
     return jsonify([dict(r) for r in rows])
 
@@ -72,9 +70,10 @@ def get_entries():
 def add_entry():
     data = request.json
     conn = get_conn()
-    conn.execute(
+    cur = conn.cursor()
+    cur.execute(
         "INSERT INTO gas_entries (amount, unit, price, currency, station, date, efs_card) "
-        "VALUES (?, ?, ?, ?, ?, ?, ?)",
+        "VALUES (%s, %s, %s, %s, %s, %s, %s)",
         (
             data.get('amount'),
             data.get('unit'),
@@ -86,6 +85,7 @@ def add_entry():
         )
     )
     conn.commit()
+    cur.close()
     conn.close()
     return jsonify({'status': 'ok'}), 201
 
@@ -93,8 +93,10 @@ def add_entry():
 @app.route('/entries/<int:entry_id>', methods=['DELETE'])
 def delete_entry(entry_id):
     conn = get_conn()
-    conn.execute("DELETE FROM gas_entries WHERE id = ?", (entry_id,))
+    cur = conn.cursor()
+    cur.execute("DELETE FROM gas_entries WHERE id = %s", (entry_id,))
     conn.commit()
+    cur.close()
     conn.close()
     return jsonify({'status': 'ok'})
 
