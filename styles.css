@@ -13,11 +13,16 @@
   box-sizing: border-box;
 }
 
+html {
+  overflow-x: hidden;
+}
+
 body {
   margin: 0;
   font-family: Inter, system-ui, sans-serif;
   background: linear-gradient(180deg, #eef2ff 0%, #f8fafc 100%);
   color: var(--text);
+  overflow-x: hidden;
 }
 
 .app-shell {
@@ -92,6 +97,9 @@ select {
 input[type="date"] {
   appearance: none;
   -webkit-appearance: none;
+  width: auto;
+  max-width: 100%;
+  align-self: flex-start;
 }
 
 .input-group select {
