@@ -1,4 +1,4 @@
-const API_URL = 'gas-api.cfm';
+const API_URL = '/entries';
 
 // ── Local storage keys ────────────────────────────────────────────────────────
 const LS_NAME    = 'gt_name';
@@ -226,7 +226,7 @@ entriesTable.addEventListener('click', async event => {
   const btn = event.target.closest('.remove-button');
   if (!btn) return;
   if (!confirm('Remove this entry?')) return;
-  await fetch(`${API_URL}?id=${btn.dataset.id}`, { method: 'DELETE' });
+  await fetch(`${API_URL}/${btn.dataset.id}`, { method: 'DELETE' });
   refresh();
 });
 
