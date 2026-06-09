@@ -1,4 +1,4 @@
-const API_URL = 'YOUR_RENDER_URL';
+const API_URL = 'https://gas-tracker-7268.onrender.com';
 
 const form = document.getElementById('entry-form');
 const entriesTable = document.querySelector('#entries-table tbody');
