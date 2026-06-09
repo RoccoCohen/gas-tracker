@@ -1,4 +1,4 @@
-const CACHE = 'gas-tracker-v3';
+const CACHE = 'gas-tracker-v4';
 const ASSETS = ['/', '/index.html', '/styles.css', '/app.js', '/manifest.json'];
 
 // Cache app shell on install
@@ -19,9 +19,11 @@ self.addEventListener('activate', event => {
   );
 });
 
-// App shell: cache-first. API calls (/entries): network-only — app.js handles the offline fallback.
+// App shell: cache-first. Skip external requests and /entries (app.js handles those).
 self.addEventListener('fetch', event => {
-  if (new URL(event.request.url).pathname.startsWith('/entries')) return;
+  const url = new URL(event.request.url);
+  if (url.origin !== self.location.origin) return;
+  if (url.pathname.startsWith('/entries')) return;
 
   event.respondWith(
     caches.match(event.request).then(cached => {

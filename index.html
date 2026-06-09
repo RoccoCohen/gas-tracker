@@ -51,7 +51,11 @@
 
           <div class="row">
             <label for="station">Gas station</label>
-            <input id="station" name="station" type="text" placeholder="Shell, Exxon, Costco…" autocomplete="off" />
+            <div class="station-wrap">
+              <input id="station" name="station" type="text" placeholder="Shell, Exxon, Costco…" autocomplete="off" />
+              <button type="button" id="find-nearby" class="nearby-btn" title="Find nearby stations">📍</button>
+            </div>
+            <div id="nearby-list" class="nearby-list" hidden></div>
           </div>
 
           <div class="row">

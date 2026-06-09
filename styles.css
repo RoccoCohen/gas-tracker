@@ -207,6 +207,48 @@ tbody tr:hover {
   font-size: 0.95rem;
 }
 
+/* ── Nearby stations ── */
+.station-wrap {
+  display: flex;
+  gap: 8px;
+}
+.station-wrap input { flex: 1; }
+.nearby-btn {
+  flex-shrink: 0;
+  width: 48px;
+  border-radius: 0.75rem;
+  border: 1px solid var(--border);
+  background: white;
+  font-size: 1.2rem;
+  cursor: pointer;
+  padding: 0;
+  transition: background .15s;
+}
+.nearby-btn:hover  { background: var(--primary-soft); }
+.nearby-btn:disabled { opacity: .5; cursor: default; }
+
+.nearby-list {
+  margin-top: 6px;
+  border: 1px solid var(--border);
+  border-radius: 0.75rem;
+  overflow: hidden;
+  box-shadow: 0 4px 12px rgba(0,0,0,.1);
+}
+.nearby-item {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: 12px 16px;
+  border: none;
+  border-bottom: 1px solid var(--border);
+  background: white;
+  font-size: .95rem;
+  cursor: pointer;
+  border-radius: 0;
+}
+.nearby-item:last-child { border-bottom: none; }
+.nearby-item:hover { background: var(--primary-soft); color: var(--primary); }
+
 /* ── EFS card toggle ── */
 .efs-label {
   display: flex;

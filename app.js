@@ -20,6 +20,8 @@ const currencySelect = document.getElementById('currency');
 const stationInput   = document.getElementById('station');
 const efsInput       = document.getElementById('efs_card');
 const statusBar      = document.getElementById('status-bar');
+const findNearbyBtn  = document.getElementById('find-nearby');
+const nearbyList     = document.getElementById('nearby-list');
 
 const getTodayDate = () => new Date().toISOString().slice(0, 10);
 
@@ -204,6 +206,62 @@ form.addEventListener('submit', async event => {
 
   btn.disabled    = false;
   btn.textContent = 'Save fill-up';
+});
+
+// ── Nearby stations ───────────────────────────────────────────────────────────
+findNearbyBtn.addEventListener('click', async () => {
+  findNearbyBtn.textContent = '⏳';
+  findNearbyBtn.disabled    = true;
+  nearbyList.hidden         = true;
+
+  try {
+    const pos = await new Promise((resolve, reject) =>
+      navigator.geolocation.getCurrentPosition(resolve, reject, { timeout: 10000 })
+    );
+    const { latitude: lat, longitude: lon } = pos.coords;
+
+    const query = `[out:json][timeout:10];node["amenity"="fuel"](around:1609,${lat},${lon});out tags;`;
+    const res   = await fetch('https://overpass-api.de/api/interpreter', {
+      method: 'POST',
+      body:   query,
+    });
+    const data = await res.json();
+
+    const stations = [...new Set(
+      data.elements
+        .map(el => el.tags.name || el.tags.brand || el.tags.operator)
+        .filter(Boolean)
+    )].sort();
+
+    showNearbyList(stations.length ? stations : ['No stations found nearby']);
+  } catch (e) {
+    showNearbyList([e.code === 1 ? 'Location access denied' : 'Could not find nearby stations']);
+  } finally {
+    findNearbyBtn.textContent = '📍';
+    findNearbyBtn.disabled    = false;
+  }
+});
+
+function showNearbyList(items) {
+  nearbyList.innerHTML = '';
+  items.forEach(name => {
+    const btn  = document.createElement('button');
+    btn.type        = 'button';
+    btn.className   = 'nearby-item';
+    btn.textContent = name;
+    btn.addEventListener('click', () => {
+      stationInput.value = name;
+      nearbyList.hidden  = true;
+    });
+    nearbyList.appendChild(btn);
+  });
+  nearbyList.hidden = false;
+}
+
+document.addEventListener('click', e => {
+  if (!nearbyList.contains(e.target) && e.target !== findNearbyBtn) {
+    nearbyList.hidden = true;
+  }
 });
 
 // ── Delete ────────────────────────────────────────────────────────────────────
