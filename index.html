@@ -47,6 +47,12 @@
                 <option value="CAD">CAD</option>
               </select>
             </div>
+            <div id="usd-hint" class="usd-hint" hidden></div>
+          </div>
+
+          <div class="row">
+            <label for="miles">Odometer (miles)</label>
+            <input id="miles" name="miles" type="text" inputmode="numeric" pattern="[0-9]*" placeholder="e.g. 45231" />
           </div>
 
           <div class="row">
@@ -111,6 +117,7 @@
               <tr>
                 <th>Date</th>
                 <th>Station</th>
+                <th>Miles</th>
                 <th>Gallons</th>
                 <th>Total</th>
                 <th>$/gal</th>

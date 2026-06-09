@@ -27,10 +27,12 @@ def migrate():
             station    TEXT,
             date       TEXT,
             efs_card   INTEGER DEFAULT 0,
+            miles      INTEGER,
             created_at TIMESTAMP DEFAULT NOW()
         )
     """)
     cur.execute("ALTER TABLE gas_entries ADD COLUMN IF NOT EXISTS efs_card INTEGER DEFAULT 0")
+    cur.execute("ALTER TABLE gas_entries ADD COLUMN IF NOT EXISTS miles INTEGER")
     conn.commit()
     cur.close()
     conn.close()
@@ -61,7 +63,7 @@ def get_entries():
     conn = get_conn()
     cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
     cur.execute(
-        "SELECT id, amount, unit, price, currency, station, date, efs_card "
+        "SELECT id, amount, unit, price, currency, station, date, efs_card, miles "
         "FROM gas_entries ORDER BY date DESC, id DESC"
     )
     rows = cur.fetchall()
@@ -76,8 +78,8 @@ def add_entry():
     conn = get_conn()
     cur = conn.cursor()
     cur.execute(
-        "INSERT INTO gas_entries (amount, unit, price, currency, station, date, efs_card) "
-        "VALUES (%s, %s, %s, %s, %s, %s, %s)",
+        "INSERT INTO gas_entries (amount, unit, price, currency, station, date, efs_card, miles) "
+        "VALUES (%s, %s, %s, %s, %s, %s, %s, %s)",
         (
             data.get('amount'),
             data.get('unit'),
@@ -86,6 +88,7 @@ def add_entry():
             data.get('station', ''),
             data.get('date'),
             1 if data.get('efs_card') else 0,
+            data.get('miles') or None,
         )
     )
     conn.commit()

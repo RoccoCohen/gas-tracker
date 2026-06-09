@@ -19,11 +19,35 @@ const unitSelect     = document.getElementById('unit');
 const currencySelect = document.getElementById('currency');
 const stationInput   = document.getElementById('station');
 const efsInput       = document.getElementById('efs_card');
+const milesInput     = document.getElementById('miles');
+const usdHint        = document.getElementById('usd-hint');
 const statusBar      = document.getElementById('status-bar');
 const findNearbyBtn  = document.getElementById('find-nearby');
 const nearbyList     = document.getElementById('nearby-list');
 
 const getTodayDate = () => new Date().toISOString().slice(0, 10);
+
+// ── CAD → USD rate ────────────────────────────────────────────────────────────
+let cadToUsd = null;
+async function getCadRate() {
+  if (cadToUsd !== null) return cadToUsd;
+  try {
+    const res  = await fetch('https://api.frankfurter.app/latest?from=CAD&to=USD');
+    const data = await res.json();
+    cadToUsd   = data.rates.USD;
+  } catch {
+    cadToUsd = 0.73;
+  }
+  return cadToUsd;
+}
+async function updateUsdHint() {
+  if (currencySelect.value !== 'CAD') { usdHint.hidden = true; return; }
+  const price = parseFloat(priceInput.value.replace(',', '.'));
+  if (!price)  { usdHint.hidden = true; return; }
+  const rate = await getCadRate();
+  usdHint.textContent = `≈ $${(price * rate).toFixed(2)} USD`;
+  usdHint.hidden = false;
+}
 
 // ── Status bar ────────────────────────────────────────────────────────────────
 function showStatus(msg, type = 'info') {
@@ -105,11 +129,15 @@ function renderEntries(entries) {
     const perGal = computePerGal(entry);
     const row    = document.createElement('tr');
     if (entry._pending) row.classList.add('row-pending');
+    const usdEquiv = (entry.currency === 'CAD' && cadToUsd)
+      ? `<br><span class="usd-equiv">≈ $${(entry.price * cadToUsd).toFixed(2)} USD</span>`
+      : '';
     row.innerHTML = `
       <td>${entry.date}${entry._pending ? ' <span class="pending-badge">pending</span>' : ''}</td>
       <td>${esc(entry.station) || '<span class="muted">—</span>'}</td>
+      <td>${entry.miles ? entry.miles.toLocaleString() : '<span class="muted">—</span>'}</td>
       <td>${parseFloat(entry.amount).toFixed(2)} ${entry.unit === 'gallons' ? 'gal' : 'L'}</td>
-      <td>${fmt$(entry.price, entry.currency)}</td>
+      <td>${fmt$(entry.price, entry.currency)}${usdEquiv}</td>
       <td>${perGal !== null ? fmt$(perGal, entry.currency) : '<span class="muted">—</span>'}</td>
       <td class="efs-cell">${entry.efs_card ? '<span class="efs-check">✓</span>' : '<span class="muted">—</span>'}</td>
       <td>${entry._pending ? '' : `<button class="remove-button" data-id="${entry.id}" title="Remove">✕</button>`}</td>
@@ -159,6 +187,9 @@ async function refresh() {
   updateOnlineStatus();
 }
 
+priceInput.addEventListener('input', updateUsdHint);
+currencySelect.addEventListener('change', updateUsdHint);
+
 // ── Form submit ───────────────────────────────────────────────────────────────
 form.addEventListener('submit', async event => {
   event.preventDefault();
@@ -171,6 +202,7 @@ form.addEventListener('submit', async event => {
     station:  stationInput.value.trim(),
     date:     dateInput.value || getTodayDate(),
     efs_card: efsInput.checked,
+    miles:    parseInt(milesInput.value) || null,
   };
 
   const btn       = form.querySelector('button[type="submit"]');
@@ -307,5 +339,5 @@ window.addEventListener('load', () => {
   dateInput.value = getTodayDate();
   renderEntries(getLocalEntries());
   updateOnlineStatus();
-  refresh();
+  getCadRate().then(() => refresh());
 });

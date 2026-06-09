@@ -221,6 +221,17 @@ tbody tr:hover {
   font-size: 0.95rem;
 }
 
+/* ── CAD/USD hint ── */
+.usd-hint {
+  font-size: 0.85rem;
+  color: var(--muted);
+  margin-top: 4px;
+}
+.usd-equiv {
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+
 /* ── Nearby stations ── */
 .station-wrap {
   display: flex;
