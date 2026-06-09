@@ -14,6 +14,8 @@ def get_conn():
         password=os.environ['DB_PASSWORD'],
         database='Adam_Rocco',
         tds_version='7.4',
+        login_timeout=10,
+        timeout=10,
     )
 
 
