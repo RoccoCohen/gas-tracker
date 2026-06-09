@@ -1,9 +1,8 @@
 const API_URL = '/entries';
 
 // ── Local storage keys ────────────────────────────────────────────────────────
-const LS_NAME    = 'gt_name';
-const LS_ENTRIES = 'gt_entries';   // cached copy of server entries
-const LS_QUEUE   = 'gt_queue';     // entries saved while offline
+const LS_ENTRIES = 'gt_entries';
+const LS_QUEUE   = 'gt_queue';
 
 // ── DOM refs ──────────────────────────────────────────────────────────────────
 const form           = document.getElementById('entry-form');
@@ -19,7 +18,7 @@ const priceInput     = document.getElementById('price');
 const unitSelect     = document.getElementById('unit');
 const currencySelect = document.getElementById('currency');
 const stationInput   = document.getElementById('station');
-const addedByInput   = document.getElementById('added_by');
+const efsInput       = document.getElementById('efs_card');
 const statusBar      = document.getElementById('status-bar');
 
 const getTodayDate = () => new Date().toISOString().slice(0, 10);
@@ -30,9 +29,7 @@ function showStatus(msg, type = 'info') {
   statusBar.className   = `status-bar status-${type}`;
   statusBar.hidden      = false;
 }
-function hideStatus() {
-  statusBar.hidden = true;
-}
+function hideStatus() { statusBar.hidden = true; }
 
 function updateOnlineStatus() {
   const q = getQueue();
@@ -81,11 +78,11 @@ function updateSummary(entries) {
     [totalCount, totalSpent, avgPerGal, totalGallons].forEach(el => { el.textContent = '—'; });
     return;
   }
-  const spent       = entries.reduce((s, e) => s + parseFloat(e.price), 0);
-  const galEntries  = entries.filter(e => e.unit === 'gallons');
-  const gals        = galEntries.reduce((s, e) => s + parseFloat(e.amount), 0);
-  const currencies  = [...new Set(entries.map(e => e.currency))];
-  const cur         = currencies.length === 1 ? currencies[0] : 'USD';
+  const spent      = entries.reduce((s, e) => s + parseFloat(e.price), 0);
+  const galEntries = entries.filter(e => e.unit === 'gallons');
+  const gals       = galEntries.reduce((s, e) => s + parseFloat(e.amount), 0);
+  const currencies = [...new Set(entries.map(e => e.currency))];
+  const cur        = currencies.length === 1 ? currencies[0] : 'USD';
 
   totalCount.textContent   = entries.length;
   totalSpent.textContent   = fmt$(spent, cur);
@@ -95,7 +92,6 @@ function updateSummary(entries) {
 
 // ── Table ─────────────────────────────────────────────────────────────────────
 function renderEntries(entries) {
-  // Pending queue items shown at top with a marker
   const queue = getQueue();
   const all   = [
     ...queue.map(e => ({ ...e, _pending: true })),
@@ -109,11 +105,11 @@ function renderEntries(entries) {
     if (entry._pending) row.classList.add('row-pending');
     row.innerHTML = `
       <td>${entry.date}${entry._pending ? ' <span class="pending-badge">pending</span>' : ''}</td>
-      <td class="who">${esc(entry.added_by) || '<span class="muted">—</span>'}</td>
       <td>${esc(entry.station) || '<span class="muted">—</span>'}</td>
       <td>${parseFloat(entry.amount).toFixed(2)} ${entry.unit === 'gallons' ? 'gal' : 'L'}</td>
       <td>${fmt$(entry.price, entry.currency)}</td>
       <td>${perGal !== null ? fmt$(perGal, entry.currency) : '<span class="muted">—</span>'}</td>
+      <td class="efs-cell">${entry.efs_card ? '<span class="efs-check">✓</span>' : '<span class="muted">—</span>'}</td>
       <td>${entry._pending ? '' : `<button class="remove-button" data-id="${entry.id}" title="Remove">✕</button>`}</td>
     `;
     entriesTable.appendChild(row);
@@ -165,9 +161,6 @@ async function refresh() {
 form.addEventListener('submit', async event => {
   event.preventDefault();
 
-  const name = addedByInput.value.trim();
-  if (name) localStorage.setItem(LS_NAME, name);
-
   const entry = {
     amount:   parseFloat(amountInput.value.replace(',', '.')) || 0,
     unit:     unitSelect.value,
@@ -175,7 +168,7 @@ form.addEventListener('submit', async event => {
     currency: currencySelect.value,
     station:  stationInput.value.trim(),
     date:     dateInput.value || getTodayDate(),
-    added_by: name,
+    efs_card: efsInput.checked,
   };
 
   const btn       = form.querySelector('button[type="submit"]');
@@ -183,16 +176,11 @@ form.addEventListener('submit', async event => {
   btn.textContent = 'Saving…';
 
   if (!navigator.onLine) {
-    // Queue for later, show immediately in local cache
     const queue = getQueue();
     queue.unshift(entry);
     setQueue(queue);
-
-    const saved = addedByInput.value;
     form.reset();
-    addedByInput.value = saved;
-    dateInput.value    = getTodayDate();
-
+    dateInput.value = getTodayDate();
     renderEntries(getLocalEntries());
     showStatus(`⚡ Saved offline — will sync when you reconnect (${queue.length} pending)`, 'offline');
   } else {
@@ -202,13 +190,10 @@ form.addEventListener('submit', async event => {
         headers: { 'Content-Type': 'application/json' },
         body:    JSON.stringify(entry),
       });
-      const saved = addedByInput.value;
       form.reset();
-      addedByInput.value = saved;
-      dateInput.value    = getTodayDate();
+      dateInput.value = getTodayDate();
       await refresh();
     } catch {
-      // Server unreachable even though browser says online — queue it
       const queue = getQueue();
       queue.unshift(entry);
       setQueue(queue);
@@ -234,10 +219,11 @@ entriesTable.addEventListener('click', async event => {
 exportButton.addEventListener('click', () => {
   const entries = getLocalEntries();
   if (!entries.length) return;
-  const header = ['Date', 'Who', 'Station', 'Gallons', 'Unit', 'Total', 'Currency', '$/gal'];
+  const header = ['Date', 'Station', 'Gallons', 'Unit', 'Total', 'Currency', '$/gal', 'EFS Card'];
   const rows   = entries.map(e => [
-    e.date, e.added_by, e.station, e.amount, e.unit, e.price, e.currency,
+    e.date, e.station, e.amount, e.unit, e.price, e.currency,
     computePerGal(e) !== null ? computePerGal(e).toFixed(3) : '',
+    e.efs_card ? 'Yes' : 'No',
   ]);
   const csv  = [header, ...rows]
     .map(r => r.map(v => `"${String(v ?? '').replace(/"/g, '""')}"`).join(','))
@@ -261,14 +247,7 @@ window.addEventListener('offline', () => {
 // ── Init ──────────────────────────────────────────────────────────────────────
 window.addEventListener('load', () => {
   dateInput.value = getTodayDate();
-
-  const savedName = localStorage.getItem(LS_NAME);
-  if (savedName) addedByInput.value = savedName;
-
-  // Show cached data immediately so the app feels instant
   renderEntries(getLocalEntries());
   updateOnlineStatus();
-
-  // Then fetch fresh data in the background
   refresh();
 });

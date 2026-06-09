@@ -207,6 +207,42 @@ tbody tr:hover {
   font-size: 0.95rem;
 }
 
+/* ── EFS card toggle ── */
+.efs-label {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  user-select: none;
+}
+.efs-label input[type="checkbox"] { display: none; }
+.efs-box {
+  width: 48px;
+  height: 28px;
+  border-radius: 999px;
+  background: var(--border);
+  position: relative;
+  transition: background .2s;
+  flex-shrink: 0;
+}
+.efs-box::after {
+  content: '';
+  position: absolute;
+  top: 4px; left: 4px;
+  width: 20px; height: 20px;
+  border-radius: 50%;
+  background: white;
+  transition: transform .2s;
+  box-shadow: 0 1px 3px rgba(0,0,0,.2);
+}
+.efs-label input:checked + .efs-box { background: var(--primary); }
+.efs-label input:checked + .efs-box::after { transform: translateX(20px); }
+
+.efs-cell { text-align: center; }
+.efs-check { color: #16a34a; font-weight: 700; font-size: 1.1rem; }
+
 /* ── Offline / sync status bar ── */
 .status-bar {
   position: sticky;

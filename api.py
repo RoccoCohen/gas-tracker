@@ -27,9 +27,15 @@ def migrate():
             station   TEXT,
             date      TEXT,
             added_by  TEXT,
+            efs_card  INTEGER DEFAULT 0,
             created_at TEXT DEFAULT (datetime('now'))
         )
     """)
+    # Add efs_card to existing tables that predate this column
+    try:
+        conn.execute("ALTER TABLE gas_entries ADD COLUMN efs_card INTEGER DEFAULT 0")
+    except Exception:
+        pass
     conn.commit()
     conn.close()
 
@@ -55,7 +61,7 @@ def static_files(filename):
 def get_entries():
     conn = get_conn()
     rows = conn.execute(
-        "SELECT id, amount, unit, price, currency, station, date, added_by "
+        "SELECT id, amount, unit, price, currency, station, date, efs_card "
         "FROM gas_entries ORDER BY date DESC, id DESC"
     ).fetchall()
     conn.close()
@@ -67,7 +73,7 @@ def add_entry():
     data = request.json
     conn = get_conn()
     conn.execute(
-        "INSERT INTO gas_entries (amount, unit, price, currency, station, date, added_by) "
+        "INSERT INTO gas_entries (amount, unit, price, currency, station, date, efs_card) "
         "VALUES (?, ?, ?, ?, ?, ?, ?)",
         (
             data.get('amount'),
@@ -76,7 +82,7 @@ def add_entry():
             data.get('currency'),
             data.get('station', ''),
             data.get('date'),
-            data.get('added_by', ''),
+            1 if data.get('efs_card') else 0,
         )
     )
     conn.commit()
