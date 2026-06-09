@@ -2,3 +2,4 @@ flask
 flask-cors
 pymssql
 gunicorn
+python-dotenv

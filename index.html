@@ -3,16 +3,22 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Gas Spending Tracker</title>
+  <title>Gas Tracker</title>
   <link rel="stylesheet" href="styles.css" />
   <link rel="manifest" href="manifest.json" />
+  <meta name="theme-color" content="#4338ca" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Gas Tracker" />
 </head>
 <body>
+  <div id="status-bar" class="status-bar" hidden></div>
+
   <div class="app-shell">
     <header class="hero">
       <div>
-        <h1>Gas Spending Tracker</h1>
-        <p>Save fill-ups on your phone, view totals, and export your data.</p>
+        <h1>⛽ Gas Tracker</h1>
+        <p>Log fill-ups. See what everyone's spending.</p>
       </div>
     </header>
 
@@ -20,21 +26,27 @@
       <section class="card form-card">
         <h2>New fill-up</h2>
         <form id="entry-form">
+
+          <div class="row">
+            <label for="added_by">Your name</label>
+            <input id="added_by" name="added_by" type="text" placeholder="e.g. John" required autocomplete="nickname" />
+          </div>
+
           <div class="row split">
-            <label for="amount">Amount</label>
+            <label for="amount">Gallons</label>
             <div class="input-group">
               <input id="amount" name="amount" type="text" inputmode="decimal" pattern="[0-9]*([.,][0-9]+)?" required placeholder="12.5" />
               <select id="unit" name="unit">
-                <option value="gallons">gallons</option>
-                <option value="liters">liters</option>
+                <option value="gallons">gal</option>
+                <option value="liters">L</option>
               </select>
             </div>
           </div>
 
           <div class="row split">
-            <label for="price">Price</label>
+            <label for="price">Total cost</label>
             <div class="input-group">
-              <input id="price" name="price" type="text" inputmode="decimal" pattern="[0-9]*([.,][0-9]+)?" required placeholder="4.29" />
+              <input id="price" name="price" type="text" inputmode="decimal" pattern="[0-9]*([.,][0-9]+)?" required placeholder="48.00" />
               <select id="currency" name="currency">
                 <option value="USD">USD</option>
                 <option value="CAD">CAD</option>
@@ -44,7 +56,7 @@
 
           <div class="row">
             <label for="station">Gas station</label>
-            <input id="station" name="station" type="text" placeholder="Shell, Esso, etc." />
+            <input id="station" name="station" type="text" placeholder="Shell, Exxon, Costco…" autocomplete="off" />
           </div>
 
           <div class="row">
@@ -53,37 +65,36 @@
           </div>
 
           <div class="actions">
-            <button type="submit" class="primary">Save entry</button>
-            <button type="button" id="clear-entries" class="secondary">Clear all</button>
+            <button type="submit" class="primary">Save fill-up</button>
           </div>
         </form>
       </section>
 
       <section class="card summary-card">
-        <div class="summary-header">
-          <h2>Summary</h2>
-          <p id="summary-text">No entries yet.</p>
-        </div>
-
+        <h2>Summary</h2>
         <div class="summary-grid">
           <div>
-            <span>Total fill-ups</span>
-            <strong id="total-count">0</strong>
+            <span>Fill-ups</span>
+            <strong id="total-count">—</strong>
           </div>
           <div>
             <span>Total spent</span>
-            <strong id="total-spent">$0.00</strong>
+            <strong id="total-spent">—</strong>
           </div>
           <div>
-            <span>Average price</span>
-            <strong id="avg-price">$0.00</strong>
+            <span>Avg $/gal</span>
+            <strong id="avg-per-gal">—</strong>
+          </div>
+          <div>
+            <span>Total gallons</span>
+            <strong id="total-gallons">—</strong>
           </div>
         </div>
       </section>
 
       <section class="card table-card">
         <div class="table-header">
-          <h2>Entries</h2>
+          <h2>All entries</h2>
           <button id="export-csv" class="secondary">Export CSV</button>
         </div>
 
@@ -92,12 +103,12 @@
             <thead>
               <tr>
                 <th>Date</th>
+                <th>Who</th>
                 <th>Station</th>
-                <th>Amount</th>
-                <th>Price</th>
-                <th>Currency</th>
-                <th>Per-unit</th>
-                <th>Remove</th>
+                <th>Gallons</th>
+                <th>Total</th>
+                <th>$/gal</th>
+                <th></th>
               </tr>
             </thead>
             <tbody></tbody>
@@ -107,16 +118,14 @@
     </main>
 
     <footer class="footer">
-      <p>Open this folder in a browser and use the app on your phone. It saves data locally.</p>
+      <p>Add to home screen to install &nbsp;·&nbsp; All data is shared</p>
     </footer>
   </div>
 
   <script src="app.js"></script>
   <script>
     if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('sw.js').catch(() => {
-        console.warn('Service worker registration failed.');
-      });
+      navigator.serviceWorker.register('sw.js').catch(() => {});
     }
   </script>
 </body>
