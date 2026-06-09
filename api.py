@@ -1,24 +1,20 @@
 import os
 from flask import Flask, request, jsonify
 from flask_cors import CORS
-import pyodbc
+import pymssql
 
 app = Flask(__name__)
 CORS(app)
 
-conn_str = (
-    "DRIVER={ODBC Driver 17 for SQL Server};"
-    "SERVER=acoustic-black-ox.viviotech.us;"
-    "DATABASE=Adam_Rocco;"
-    f"UID={os.environ['DB_USER']};"
-    f"PWD={os.environ['DB_PASSWORD']};"
-    "Encrypt=yes;"
-    "TrustServerCertificate=yes;"
-)
-
 
 def get_conn():
-    return pyodbc.connect(conn_str)
+    return pymssql.connect(
+        server='acoustic-black-ox.viviotech.us',
+        user=os.environ['DB_USER'],
+        password=os.environ['DB_PASSWORD'],
+        database='Adam_Rocco',
+        tds_version='7.4',
+    )
 
 
 @app.route('/entries', methods=['GET'])

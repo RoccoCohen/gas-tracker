@@ -1,4 +1,4 @@
 flask
 flask-cors
-pyodbc
+pymssql
 gunicorn
