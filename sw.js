@@ -1,4 +1,4 @@
-const CACHE = 'gas-tracker-v4';
+const CACHE = 'gas-tracker-v5';
 const ASSETS = ['/', '/index.html', '/styles.css', '/app.js', '/manifest.json'];
 
 // Cache app shell on install
