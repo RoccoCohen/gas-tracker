@@ -220,7 +220,7 @@ findNearbyBtn.addEventListener('click', async () => {
     );
     const { latitude: lat, longitude: lon } = pos.coords;
 
-    const query = `[out:json][timeout:10];node["amenity"="fuel"](around:1609,${lat},${lon});out tags;`;
+    const query = `[out:json][timeout:25];nwr["amenity"="fuel"](around:3218,${lat},${lon});out tags;`;
     const res   = await fetch('https://overpass-api.de/api/interpreter', {
       method: 'POST',
       body:   query,
