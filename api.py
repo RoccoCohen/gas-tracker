@@ -34,6 +34,10 @@ def migrate():
     conn.close()
 
 
+# Run on every startup so the table always exists
+migrate()
+
+
 # ── Static files ──────────────────────────────────────────────────────────────
 
 @app.route('/')
@@ -90,5 +94,4 @@ def delete_entry(entry_id):
 
 
 if __name__ == '__main__':
-    migrate()
     app.run(host='0.0.0.0', port=5050, debug=True)
