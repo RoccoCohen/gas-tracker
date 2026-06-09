@@ -79,6 +79,7 @@ button {
 input,
 select {
   width: 100%;
+  min-width: 0;
   border: 1px solid var(--border);
   border-radius: 0.75rem;
   background: #fff;
@@ -86,6 +87,11 @@ select {
   color: var(--text);
   font-size: 1rem;
   min-height: 3rem;
+}
+
+input[type="date"] {
+  appearance: none;
+  -webkit-appearance: none;
 }
 
 .input-group select {
