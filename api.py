@@ -97,6 +97,32 @@ def add_entry():
     return jsonify({'status': 'ok'}), 201
 
 
+@app.route('/entries/<int:entry_id>', methods=['PUT'])
+def update_entry(entry_id):
+    data = request.json
+    conn = get_conn()
+    cur = conn.cursor()
+    cur.execute(
+        "UPDATE gas_entries SET amount=%s, unit=%s, price=%s, currency=%s, station=%s, date=%s, efs_card=%s, miles=%s "
+        "WHERE id=%s",
+        (
+            data.get('amount'),
+            data.get('unit'),
+            data.get('price'),
+            data.get('currency'),
+            data.get('station', ''),
+            data.get('date'),
+            1 if data.get('efs_card') else 0,
+            data.get('miles') or None,
+            entry_id,
+        )
+    )
+    conn.commit()
+    cur.close()
+    conn.close()
+    return jsonify({'status': 'ok'})
+
+
 @app.route('/entries/<int:entry_id>', methods=['DELETE'])
 def delete_entry(entry_id):
     conn = get_conn()

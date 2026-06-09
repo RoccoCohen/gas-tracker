@@ -24,8 +24,39 @@ const usdHint        = document.getElementById('usd-hint');
 const statusBar      = document.getElementById('status-bar');
 const findNearbyBtn  = document.getElementById('find-nearby');
 const nearbyList     = document.getElementById('nearby-list');
+const submitBtn      = document.getElementById('submit-btn');
+const cancelEditBtn  = document.getElementById('cancel-edit-btn');
 
 const getTodayDate = () => new Date().toISOString().slice(0, 10);
+
+let editingId = null;
+
+function startEdit(entry) {
+  editingId             = entry.id;
+  amountInput.value     = entry.amount;
+  unitSelect.value      = entry.unit;
+  priceInput.value      = entry.price;
+  currencySelect.value  = entry.currency;
+  stationInput.value    = entry.station || '';
+  dateInput.value       = entry.date;
+  efsInput.checked      = !!entry.efs_card;
+  milesInput.value      = entry.miles || '';
+  submitBtn.textContent = 'Update entry';
+  cancelEditBtn.hidden  = false;
+  updateUsdHint();
+  form.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function cancelEdit() {
+  editingId             = null;
+  form.reset();
+  dateInput.value       = getTodayDate();
+  submitBtn.textContent = 'Save fill-up';
+  cancelEditBtn.hidden  = true;
+  hideStatus();
+}
+
+cancelEditBtn.addEventListener('click', cancelEdit);
 
 // ── CAD → USD rate ────────────────────────────────────────────────────────────
 let cadToUsd = null;
@@ -140,6 +171,7 @@ function renderEntries(entries) {
       <td>${fmt$(entry.price, entry.currency)}${usdEquiv}</td>
       <td>${perGal !== null ? fmt$(perGal, entry.currency) : '<span class="muted">—</span>'}</td>
       <td class="efs-cell">${entry.efs_card ? '<span class="efs-check">✓</span>' : '<span class="muted">—</span>'}</td>
+      <td>${entry._pending ? '' : `<button class="edit-button" data-id="${entry.id}" title="Edit">✎</button>`}</td>
       <td>${entry._pending ? '' : `<button class="remove-button" data-id="${entry.id}" title="Remove">✕</button>`}</td>
     `;
     entriesTable.appendChild(row);
@@ -205,9 +237,26 @@ form.addEventListener('submit', async event => {
     miles:    parseInt(milesInput.value) || null,
   };
 
-  const btn       = form.querySelector('button[type="submit"]');
-  btn.disabled    = true;
-  btn.textContent = 'Saving…';
+  submitBtn.disabled    = true;
+  submitBtn.textContent = editingId ? 'Updating…' : 'Saving…';
+
+  if (editingId) {
+    try {
+      await fetch(`${API_URL}/${editingId}`, {
+        method:  'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify(entry),
+      });
+      cancelEdit();
+      await refresh();
+    } catch {
+      showStatus('⚠️ Could not update entry', 'offline');
+      setTimeout(hideStatus, 3000);
+    }
+    submitBtn.disabled    = false;
+    submitBtn.textContent = 'Update entry';
+    return;
+  }
 
   if (!navigator.onLine) {
     const queue = getQueue();
@@ -236,8 +285,8 @@ form.addEventListener('submit', async event => {
     }
   }
 
-  btn.disabled    = false;
-  btn.textContent = 'Save fill-up';
+  submitBtn.disabled    = false;
+  submitBtn.textContent = 'Save fill-up';
 });
 
 // ── Nearby stations ───────────────────────────────────────────────────────────
@@ -296,12 +345,20 @@ document.addEventListener('click', e => {
   }
 });
 
-// ── Delete ────────────────────────────────────────────────────────────────────
+// ── Edit / Delete ─────────────────────────────────────────────────────────────
 entriesTable.addEventListener('click', async event => {
-  const btn = event.target.closest('.remove-button');
-  if (!btn) return;
+  const editBtn = event.target.closest('.edit-button');
+  if (editBtn) {
+    const entries = getLocalEntries();
+    const entry   = entries.find(e => e.id === parseInt(editBtn.dataset.id));
+    if (entry) startEdit(entry);
+    return;
+  }
+
+  const removeBtn = event.target.closest('.remove-button');
+  if (!removeBtn) return;
   if (!confirm('Remove this entry?')) return;
-  await fetch(`${API_URL}/${btn.dataset.id}`, { method: 'DELETE' });
+  await fetch(`${API_URL}/${removeBtn.dataset.id}`, { method: 'DELETE' });
   refresh();
 });
 

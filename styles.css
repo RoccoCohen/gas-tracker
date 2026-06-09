@@ -310,6 +310,14 @@ tbody tr:hover {
 .efs-cell { text-align: center; }
 .efs-check { color: #16a34a; font-weight: 700; font-size: 1.1rem; }
 
+.edit-button {
+  border: none;
+  background: transparent;
+  color: var(--primary);
+  cursor: pointer;
+  font-size: 1rem;
+}
+
 /* ── Offline / sync status bar ── */
 .status-bar {
   position: sticky;
