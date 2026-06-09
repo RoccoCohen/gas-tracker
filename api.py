@@ -43,11 +43,15 @@ migrate()
 
 @app.route('/')
 def index():
-    return send_from_directory('.', 'index.html')
+    res = send_from_directory('.', 'index.html')
+    res.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate'
+    return res
 
 @app.route('/<path:filename>')
 def static_files(filename):
-    return send_from_directory('.', filename)
+    res = send_from_directory('.', filename)
+    res.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate'
+    return res
 
 
 # ── API ───────────────────────────────────────────────────────────────────────
