@@ -21,26 +21,29 @@ def get_conn():
 
 @app.route('/entries', methods=['GET'])
 def get_entries():
-    conn = get_conn()
-    cursor = conn.cursor()
-    cursor.execute(
-        "SELECT id, amount, unit, price, currency, station, CONVERT(varchar, date, 23) "
-        "FROM rv_gas ORDER BY date DESC"
-    )
-    rows = cursor.fetchall()
-    conn.close()
-    return jsonify([
-        {
-            'id': row[0],
-            'amount': row[1],
-            'unit': row[2],
-            'price': row[3],
-            'currency': row[4],
-            'station': row[5] or '',
-            'date': row[6],
-        }
-        for row in rows
-    ])
+    try:
+        conn = get_conn()
+        cursor = conn.cursor()
+        cursor.execute(
+            "SELECT id, amount, unit, price, currency, station, CONVERT(varchar, date, 23) "
+            "FROM rv_gas ORDER BY date DESC"
+        )
+        rows = cursor.fetchall()
+        conn.close()
+        return jsonify([
+            {
+                'id': row[0],
+                'amount': row[1],
+                'unit': row[2],
+                'price': row[3],
+                'currency': row[4],
+                'station': row[5] or '',
+                'date': row[6],
+            }
+            for row in rows
+        ])
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
 
 
 @app.route('/entries', methods=['POST'])
