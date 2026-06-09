@@ -23,7 +23,7 @@ def get_entries():
     cursor = conn.cursor()
     cursor.execute(
         "SELECT id, amount, unit, price, currency, station, CONVERT(varchar, date, 23) "
-        "FROM fill_ups ORDER BY date DESC"
+        "FROM rv_gas ORDER BY date DESC"
     )
     rows = cursor.fetchall()
     conn.close()
@@ -47,7 +47,7 @@ def add_entry():
     conn = get_conn()
     cursor = conn.cursor()
     cursor.execute(
-        "INSERT INTO fill_ups (amount, unit, price, currency, station, date) "
+        "INSERT INTO rv_gas (amount, unit, price, currency, station, date) "
         "VALUES (?, ?, ?, ?, ?, ?)",
         data['amount'], data['unit'], data['price'],
         data['currency'], data['station'], data['date'],
@@ -61,7 +61,7 @@ def add_entry():
 def delete_entry(entry_id):
     conn = get_conn()
     cursor = conn.cursor()
-    cursor.execute("DELETE FROM fill_ups WHERE id = ?", entry_id)
+    cursor.execute("DELETE FROM rv_gas WHERE id = ?", entry_id)
     conn.commit()
     conn.close()
     return jsonify({'status': 'ok'})
