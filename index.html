@@ -52,7 +52,10 @@
 
           <div class="row">
             <label for="miles">Odometer (miles)</label>
-            <input id="miles" name="miles" type="text" inputmode="numeric" pattern="[0-9]*" placeholder="e.g. 45231" />
+            <div class="input-group">
+              <input id="miles" name="miles" type="text" inputmode="numeric" pattern="[0-9]*" placeholder="e.g. 45231" />
+              <input id="trip-miles" type="text" readonly tabindex="-1" placeholder="Trip mi" />
+            </div>
           </div>
 
           <div class="row">

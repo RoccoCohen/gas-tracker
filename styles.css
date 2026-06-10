@@ -318,6 +318,15 @@ tbody tr:hover {
   font-size: 1rem;
 }
 
+#trip-miles {
+  flex: 0 0 90px;
+  background: #f8fafc;
+  color: var(--muted);
+  cursor: default;
+  text-align: center;
+  font-size: 0.9rem;
+}
+
 /* ── Offline / sync status bar ── */
 .status-bar {
   position: sticky;

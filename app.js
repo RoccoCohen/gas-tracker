@@ -20,6 +20,7 @@ const currencySelect = document.getElementById('currency');
 const stationInput   = document.getElementById('station');
 const efsInput       = document.getElementById('efs_card');
 const milesInput     = document.getElementById('miles');
+const tripMilesInput = document.getElementById('trip-miles');
 const usdHint        = document.getElementById('usd-hint');
 const statusBar      = document.getElementById('status-bar');
 const findNearbyBtn  = document.getElementById('find-nearby');
@@ -51,12 +52,26 @@ function cancelEdit() {
   editingId             = null;
   form.reset();
   dateInput.value       = getTodayDate();
+  tripMilesInput.value  = '';
   submitBtn.textContent = 'Save fill-up';
   cancelEditBtn.hidden  = true;
   hideStatus();
 }
 
 cancelEditBtn.addEventListener('click', cancelEdit);
+
+// ── Trip miles ────────────────────────────────────────────────────────────────
+function updateTripMiles() {
+  const current = parseInt(milesInput.value);
+  if (!current) { tripMilesInput.value = ''; return; }
+  const entries  = getLocalEntries();
+  const lastMiles = entries.find(e => e.miles && (!editingId || e.id !== editingId))?.miles;
+  if (!lastMiles) { tripMilesInput.value = ''; return; }
+  const trip = current - lastMiles;
+  tripMilesInput.value = trip > 0 ? `${trip.toLocaleString()} mi` : '';
+}
+
+milesInput.addEventListener('input', updateTripMiles);
 
 // ── CAD → USD rate ────────────────────────────────────────────────────────────
 let cadToUsd = null;
@@ -120,8 +135,10 @@ function fmt$(value, currency) {
 }
 function computePerGal(entry) {
   if (!entry.amount) return null;
-  const gals = entry.unit === 'liters' ? entry.amount / 3.78541 : entry.amount;
-  return entry.price / gals;
+  const gals    = entry.unit === 'liters' ? entry.amount / 3.78541 : entry.amount;
+  const rate    = cadToUsd || 0.73;
+  const priceUsd = entry.currency === 'CAD' ? entry.price * rate : entry.price;
+  return priceUsd / gals;
 }
 function esc(str) {
   if (!str) return '';
@@ -178,7 +195,7 @@ function renderEntries(entries) {
       <td>${entry.miles ? entry.miles.toLocaleString() : '<span class="muted">—</span>'}</td>
       <td>${parseFloat(entry.amount).toFixed(2)} ${entry.unit === 'gallons' ? 'gal' : 'L'}</td>
       <td>${fmt$(entry.price, entry.currency)}${usdEquiv}</td>
-      <td>${perGal !== null ? fmt$(perGal, entry.currency) : '<span class="muted">—</span>'}</td>
+      <td>${perGal !== null ? `$${perGal.toFixed(3)} USD` : '<span class="muted">—</span>'}</td>
       <td class="efs-cell">${entry.efs_card ? '<span class="efs-check">✓</span>' : '<span class="muted">—</span>'}</td>
       <td>${entry._pending ? '' : `<button class="edit-button" data-id="${entry.id}" title="Edit">✎</button>`}</td>
       <td>${entry._pending ? '' : `<button class="remove-button" data-id="${entry.id}" title="Remove">✕</button>`}</td>
@@ -272,7 +289,8 @@ form.addEventListener('submit', async event => {
     queue.unshift(entry);
     setQueue(queue);
     form.reset();
-    dateInput.value = getTodayDate();
+    dateInput.value      = getTodayDate();
+    tripMilesInput.value = '';
     renderEntries(getLocalEntries());
     showStatus(`⚡ Saved offline — will sync when you reconnect (${queue.length} pending)`, 'offline');
   } else {
@@ -283,7 +301,8 @@ form.addEventListener('submit', async event => {
         body:    JSON.stringify(entry),
       });
       form.reset();
-      dateInput.value = getTodayDate();
+      dateInput.value      = getTodayDate();
+      tripMilesInput.value = '';
       await refresh();
     } catch {
       const queue = getQueue();
