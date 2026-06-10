@@ -135,16 +135,24 @@ function updateSummary(entries) {
     [totalCount, totalSpent, avgPerGal, totalGallons].forEach(el => { el.textContent = '—'; });
     return;
   }
-  const spent      = entries.reduce((s, e) => s + parseFloat(e.price), 0);
-  const galEntries = entries.filter(e => e.unit === 'gallons');
-  const gals       = galEntries.reduce((s, e) => s + parseFloat(e.amount), 0);
-  const currencies = [...new Set(entries.map(e => e.currency))];
-  const cur        = currencies.length === 1 ? currencies[0] : 'USD';
+
+  const LITERS_TO_GAL = 3.78541;
+  const rate = cadToUsd || 0.73;
+
+  const spentUsd = entries.reduce((s, e) => {
+    const price = parseFloat(e.price);
+    return s + (e.currency === 'CAD' ? price * rate : price);
+  }, 0);
+
+  const gals = entries.reduce((s, e) => {
+    const amt = parseFloat(e.amount);
+    return s + (e.unit === 'liters' ? amt / LITERS_TO_GAL : amt);
+  }, 0);
 
   totalCount.textContent   = entries.length;
-  totalSpent.textContent   = fmt$(spent, cur);
+  totalSpent.textContent   = `$${spentUsd.toFixed(2)} USD`;
   totalGallons.textContent = gals.toFixed(1) + ' gal';
-  avgPerGal.textContent    = gals > 0 ? fmt$(spent / gals, cur) + '/gal' : '—';
+  avgPerGal.textContent    = gals > 0 ? `$${(spentUsd / gals).toFixed(2)}/gal` : '—';
 }
 
 // ── Table ─────────────────────────────────────────────────────────────────────
