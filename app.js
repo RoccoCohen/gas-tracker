@@ -259,8 +259,9 @@ form.addEventListener('submit', async event => {
     currency: currencySelect.value,
     station:  stationInput.value.trim(),
     date:     dateInput.value || getTodayDate(),
-    efs_card: efsInput.checked,
-    miles:    parseInt(milesInput.value) || null,
+    efs_card:   efsInput.checked,
+    miles:      parseInt(milesInput.value) || null,
+    trip_miles: parseInt(tripMilesInput.value.replace(/[^0-9]/g, '')) || null,
   };
 
   submitBtn.disabled    = true;

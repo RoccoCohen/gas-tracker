@@ -319,7 +319,7 @@ tbody tr:hover {
 }
 
 #trip-miles {
-  flex: 0 0 90px;
+  flex: 1;
   background: #f8fafc;
   color: var(--muted);
   cursor: default;

@@ -33,6 +33,7 @@ def migrate():
     """)
     cur.execute("ALTER TABLE gas_entries ADD COLUMN IF NOT EXISTS efs_card INTEGER DEFAULT 0")
     cur.execute("ALTER TABLE gas_entries ADD COLUMN IF NOT EXISTS miles INTEGER")
+    cur.execute("ALTER TABLE gas_entries ADD COLUMN IF NOT EXISTS trip_miles INTEGER")
     conn.commit()
     cur.close()
     conn.close()
@@ -63,7 +64,7 @@ def get_entries():
     conn = get_conn()
     cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
     cur.execute(
-        "SELECT id, amount, unit, price, currency, station, date, efs_card, miles "
+        "SELECT id, amount, unit, price, currency, station, date, efs_card, miles, trip_miles "
         "FROM gas_entries ORDER BY date DESC, id DESC"
     )
     rows = cur.fetchall()
@@ -78,8 +79,8 @@ def add_entry():
     conn = get_conn()
     cur = conn.cursor()
     cur.execute(
-        "INSERT INTO gas_entries (amount, unit, price, currency, station, date, efs_card, miles) "
-        "VALUES (%s, %s, %s, %s, %s, %s, %s, %s)",
+        "INSERT INTO gas_entries (amount, unit, price, currency, station, date, efs_card, miles, trip_miles) "
+        "VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)",
         (
             data.get('amount'),
             data.get('unit'),
@@ -89,6 +90,7 @@ def add_entry():
             data.get('date'),
             1 if data.get('efs_card') else 0,
             data.get('miles') or None,
+            data.get('trip_miles') or None,
         )
     )
     conn.commit()
@@ -103,7 +105,7 @@ def update_entry(entry_id):
     conn = get_conn()
     cur = conn.cursor()
     cur.execute(
-        "UPDATE gas_entries SET amount=%s, unit=%s, price=%s, currency=%s, station=%s, date=%s, efs_card=%s, miles=%s "
+        "UPDATE gas_entries SET amount=%s, unit=%s, price=%s, currency=%s, station=%s, date=%s, efs_card=%s, miles=%s, trip_miles=%s "
         "WHERE id=%s",
         (
             data.get('amount'),
@@ -114,6 +116,7 @@ def update_entry(entry_id):
             data.get('date'),
             1 if data.get('efs_card') else 0,
             data.get('miles') or None,
+            data.get('trip_miles') or None,
             entry_id,
         )
     )
