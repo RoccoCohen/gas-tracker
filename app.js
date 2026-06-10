@@ -183,18 +183,22 @@ function renderEntries(entries) {
 
   entriesTable.innerHTML = '';
   all.forEach(entry => {
-    const perGal = computePerGal(entry);
-    const row    = document.createElement('tr');
+    const perGal   = computePerGal(entry);
+    const row      = document.createElement('tr');
     if (entry._pending) row.classList.add('row-pending');
-    const usdEquiv = (entry.currency === 'CAD' && cadToUsd)
-      ? `<br><span class="usd-equiv">≈ $${(entry.price * cadToUsd).toFixed(2)} USD</span>`
-      : '';
+    const rate     = cadToUsd || 0.73;
+    const dispGal  = entry.unit === 'liters'
+      ? (entry.amount / 3.78541).toFixed(2)
+      : parseFloat(entry.amount).toFixed(2);
+    const dispPrice = entry.currency === 'CAD'
+      ? `$${(entry.price * rate).toFixed(2)}`
+      : `$${parseFloat(entry.price).toFixed(2)}`;
     row.innerHTML = `
       <td>${entry.date}${entry._pending ? ' <span class="pending-badge">pending</span>' : ''}</td>
       <td>${esc(entry.station) || '<span class="muted">—</span>'}</td>
       <td>${entry.miles ? entry.miles.toLocaleString() : '<span class="muted">—</span>'}</td>
-      <td>${parseFloat(entry.amount).toFixed(2)} ${entry.unit === 'gallons' ? 'gal' : 'L'}</td>
-      <td>${fmt$(entry.price, entry.currency)}${usdEquiv}</td>
+      <td>${dispGal} gal</td>
+      <td>${dispPrice} USD</td>
       <td>${perGal !== null ? `$${perGal.toFixed(3)} USD` : '<span class="muted">—</span>'}</td>
       <td class="efs-cell">${entry.efs_card ? '<span class="efs-check">✓</span>' : '<span class="muted">—</span>'}</td>
       <td>${entry._pending ? '' : `<button class="edit-button" data-id="${entry.id}" title="Edit">✎</button>`}</td>
