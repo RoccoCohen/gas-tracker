@@ -119,8 +119,9 @@ function fmt$(value, currency) {
   return `${symbol}${parseFloat(value).toFixed(2)}`;
 }
 function computePerGal(entry) {
-  if (!entry.amount || entry.unit !== 'gallons') return null;
-  return entry.price / entry.amount;
+  if (!entry.amount) return null;
+  const gals = entry.unit === 'liters' ? entry.amount / 3.78541 : entry.amount;
+  return entry.price / gals;
 }
 function esc(str) {
   if (!str) return '';
