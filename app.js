@@ -42,6 +42,7 @@ function startEdit(entry) {
   dateInput.value       = entry.date;
   efsInput.checked      = !!entry.efs_card;
   milesInput.value      = entry.miles || '';
+  tripMilesInput.value  = entry.trip_miles || '';
   submitBtn.textContent = 'Update entry';
   cancelEditBtn.hidden  = false;
   updateUsdHint();
@@ -60,18 +61,6 @@ function cancelEdit() {
 
 cancelEditBtn.addEventListener('click', cancelEdit);
 
-// ── Trip miles ────────────────────────────────────────────────────────────────
-function updateTripMiles() {
-  const current = parseInt(milesInput.value);
-  if (!current) { tripMilesInput.value = ''; return; }
-  const entries  = getLocalEntries();
-  const lastMiles = entries.find(e => e.miles && (!editingId || e.id !== editingId))?.miles;
-  if (!lastMiles) { tripMilesInput.value = ''; return; }
-  const trip = current - lastMiles;
-  tripMilesInput.value = trip > 0 ? `${trip.toLocaleString()} mi` : '';
-}
-
-milesInput.addEventListener('input', updateTripMiles);
 
 // ── CAD → USD rate ────────────────────────────────────────────────────────────
 let cadToUsd = null;
@@ -265,7 +254,7 @@ form.addEventListener('submit', async event => {
     date:     dateInput.value || getTodayDate(),
     efs_card:   efsInput.checked,
     miles:      parseInt(milesInput.value) || null,
-    trip_miles: parseInt(tripMilesInput.value.replace(/[^0-9]/g, '')) || null,
+    trip_miles: parseInt(tripMilesInput.value) || null,
   };
 
   submitBtn.disabled    = true;

@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Gas Tracker</title>
-  <link rel="stylesheet" href="styles.css?v=4" />
+  <link rel="stylesheet" href="styles.css?v=5" />
   <link rel="manifest" href="manifest.json" />
   <meta name="theme-color" content="#4338ca" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
@@ -51,10 +51,10 @@
           </div>
 
           <div class="row split">
-            <label for="miles">Odometer (miles)</label>
+            <label for="miles">Odometer / Trip miles</label>
             <div class="input-group">
-              <input id="miles" name="miles" type="text" inputmode="numeric" pattern="[0-9]*" placeholder="e.g. 45231" />
-              <input id="trip-miles" type="text" readonly tabindex="-1" placeholder="Trip mi" />
+              <input id="miles" name="miles" type="text" inputmode="numeric" pattern="[0-9]*" placeholder="Odometer" />
+              <input id="trip-miles" name="trip_miles" type="text" inputmode="numeric" pattern="[0-9]*" placeholder="Trip miles" />
             </div>
           </div>
 
@@ -141,6 +141,6 @@
     </footer>
   </div>
 
-  <script src="app.js?v=4"></script>
+  <script src="app.js?v=5"></script>
 </body>
 </html>

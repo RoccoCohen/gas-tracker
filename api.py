@@ -1,8 +1,11 @@
 import os
 import psycopg2
 import psycopg2.extras
+from dotenv import load_dotenv
 from flask import Flask, request, jsonify, send_from_directory
 from flask_cors import CORS
+
+load_dotenv()
 
 app = Flask(__name__)
 CORS(app)
